@@ -7,7 +7,7 @@ export const GameSession = z.object({
   userId: z.string(), // userId -> User.id
   characterId: z.string(), // characterId -> Character.id
   title: z.string().optional(),
-  currentScene: z.string(), // currentScene -> Scene.id
+  currentSceneId: z.string(), // currentScene -> Scene.id
   scenes: z.array(Scene).default([]), // discovered world
   turnCount: z.number().int().min(0).default(0),
   createdAt: z.iso.datetime(),
