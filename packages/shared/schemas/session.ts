@@ -11,7 +11,7 @@ export const GameSession = z.object({
   scenes: z.array(Scene).default([]), // discovered world
   turnCount: z.number().int().min(0).default(0),
   createdAt: z.iso.datetime(),
-  updatedAt: z.iso.datetime().default(new Date().toISOString()), // last save
+  updatedAt: z.iso.datetime(), // last save
   // Trimmed history for agent memory
   summary: z.string().default(""),
   recentTurns: z.array(TrimmedTurn).default([]), // most recent turns for agent memory

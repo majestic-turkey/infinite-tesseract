@@ -32,3 +32,5 @@ export const Item = z.object({
 })
 
 export type Item = z.infer<typeof Item>
+export type ItemType = z.infer<typeof ItemType>
+export type Slot = z.infer<typeof Slot>

@@ -17,6 +17,7 @@ export const PlayerAction = z.object({
 })
 
 export const Turn = z.object({
+    id: z.string(),
     narrative: z.string(),
     hpDelta: z.number().int().default(0),
     goldDelta: z.number().int().default(0),
@@ -33,12 +34,12 @@ export const Turn = z.object({
     }),
     locationChange: z.string().optional(), // target scene id
     choices: z.array(Choice).default([]),
+    timestamp: z.iso.datetime(),
 })
 
 export const TrimmedTurn = z.object({
   turnId: z.string(), // turnId -> Turn.id
-  playerInput: z.string().max(200),
-  narration: z.string().max(500),
+  narrative: z.string().max(500),
   action: z.string().max(200),
 })
 
