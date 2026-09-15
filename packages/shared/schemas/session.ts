@@ -15,6 +15,7 @@ export const GameSession = z.object({
   // Trimmed history for agent memory
   summary: z.string().default(""),
   recentTurns: z.array(TrimmedTurn).default([]), // most recent turns for agent memory
+  rootSeed: z.float32()
 })
 
 export type GameSession = z.infer<typeof GameSession>

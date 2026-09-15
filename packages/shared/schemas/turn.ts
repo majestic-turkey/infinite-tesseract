@@ -1,6 +1,20 @@
 import { z } from "zod"
 import { Item } from "./items.js"
 import { StatName } from "./stats.js"
+import { Effect } from "./effect.js"
+
+enum Difficulty {
+    Easy = 8,
+    Medium = 12,
+    Hard = 16,
+    Heroic = 20
+}
+
+enum AdvantageModifier {
+    None = "none",
+    Advantage = "advantage",
+    Disadvantage = "disadvantage"
+}
 
 export const StatDelta = z.partialRecord(StatName, z.number().int())
 
@@ -16,22 +30,21 @@ export const PlayerAction = z.object({
   selectedChoiceId: z.string().optional(), // selectedChoiceId -> Choice.id
 })
 
+export const Check = z.object({
+    stat: StatName,
+    difficulty: Difficulty,
+    modifier: AdvantageModifier
+})
+
+export const Branch = z.object({
+    narrative: z.string(),
+    effects: z.array(Effect).default([]),
+})
+
 export const AgentTurnOutput = z.object({
-  narrative: z.string(),
-  hpDelta: z.number().int().default(0),
-  goldDelta: z.number().int().default(0),
-  xpGained: StatDelta.default({}),
-  itemsGained: z.array(Item).default([]),
-  itemsLost: z.array(z.string()).default([]), // item ids
-  perksGained: z.array(z.string()).default([]),
-  reputationDelta: z.object({
-      renown: z.number().int().default(0),
-      morality: z.number().int().default(0),
-  }).default({
-      renown: 0,
-      morality: 0,
-  }),
-  locationChange: z.string().optional(), // target scene id
+  check: Check.optional(),
+  onSuccess: Branch.optional(),
+  onFailure: Branch.optional(),
   choices: z.array(Choice).default([]),
 })
 
