@@ -3,18 +3,9 @@ import { Item } from "./items.js"
 import { StatName } from "./stats.js"
 import { Effect } from "./effect.js"
 
-enum Difficulty {
-    Easy = 8,
-    Medium = 12,
-    Hard = 16,
-    Heroic = 20
-}
+export type Difficulty = "easy" | "medium" | "hard" | "heroic"
 
-enum AdvantageModifier {
-    None = "none",
-    Advantage = "advantage",
-    Disadvantage = "disadvantage"
-}
+export type AdvantageModifier = "none" | "advantage" | "disadvantage"
 
 export const StatDelta = z.partialRecord(StatName, z.number().int())
 
@@ -32,8 +23,8 @@ export const PlayerAction = z.object({
 
 export const Check = z.object({
     stat: StatName,
-    difficulty: Difficulty,
-    modifier: AdvantageModifier
+    difficulty: z.enum(["easy", "medium", "hard", "heroic"]),
+    modifier: z.enum(["none", "advantage", "disadvantage"])
 })
 
 export const Branch = z.object({
