@@ -1,28 +1,29 @@
-import { describe, expect, it } from "vitest"
-import { AgentTurnOutput, Choice, PlayerAction, StatDelta, TrimmedTurn, Turn } from "../../../packages/shared/schemas/turn.js"
+import { describe, expect, expectTypeOf, it } from "vitest"
+import type { z } from "zod"
 import {
-  TIMESTAMP,
+  AgentTurnOutput,
+  Branch,
+  Check,
+  Choice,
+  PlayerAction,
+  StatDelta,
+  TrimmedTurn,
+  Turn,
+  type AdvantageModifier,
+  type Difficulty,
+} from "../../../packages/shared/schemas/turn.js"
+import {
   expectInvalid,
   expectValid,
   omit,
   str,
   validAgentTurnOutput,
+  validBranch,
+  validCheck,
   validChoice,
-  validItem,
   validTrimmedTurn,
   validTurn,
 } from "../test-utils/fixtures.js"
-
-const turnDefaults = {
-  hpDelta: 0,
-  goldDelta: 0,
-  xpGained: {},
-  itemsGained: [],
-  itemsLost: [],
-  perksGained: [],
-  reputationDelta: { renown: 0, morality: 0 },
-  choices: [],
-}
 
 describe("StatDelta", () => {
   it.each([{}, { strength: 5 }, { dexterity: -3, charisma: 0 }])("accepts %j", (delta) => {
@@ -80,86 +81,117 @@ describe("PlayerAction", () => {
   })
 })
 
-describe("AgentTurnOutput", () => {
-  it("applies defaults to a minimal output", () => {
-    const output = expectValid(AgentTurnOutput, validAgentTurnOutput())
-    expect(output).toEqual({ ...validAgentTurnOutput(), ...turnDefaults })
-    expect(output).not.toHaveProperty("locationChange")
+describe("Check", () => {
+  it("accepts a valid check", () => {
+    expect(expectValid(Check, validCheck())).toEqual(validCheck())
   })
 
-  it("accepts a fully specified output", () => {
-    const input = {
-      narrative: "You find a sword and lose your torch.",
-      hpDelta: -4,
-      goldDelta: 10,
-      xpGained: { strength: 5 },
-      itemsGained: [{ ...validItem(), twoHanded: false, bonuses: {}, qty: 1 }],
-      itemsLost: ["item-torch"],
-      perksGained: ["Blade Adept"],
-      reputationDelta: { renown: 1, morality: -1 },
-      locationChange: "scene-2",
-      choices: [validChoice()],
-    }
-    expect(expectValid(AgentTurnOutput, input)).toEqual(input)
+  it.each(Check.shape.difficulty.options)("accepts difficulty %s", (difficulty) => {
+    expectValid(Check, { ...validCheck(), difficulty })
   })
 
-  it("fills in a partial reputationDelta", () => {
-    const output = expectValid(AgentTurnOutput, { ...validAgentTurnOutput(), reputationDelta: { renown: 3 } })
-    expect(output.reputationDelta).toEqual({ renown: 3, morality: 0 })
+  it.each(Check.shape.modifier.options)("accepts modifier %s", (modifier) => {
+    expectValid(Check, { ...validCheck(), modifier })
   })
 
-  it("does not require an id or timestamp", () => {
-    expect(expectValid(AgentTurnOutput, validAgentTurnOutput())).not.toHaveProperty("id")
-  })
-})
-
-// Turn duplicates AgentTurnOutput's fields, so run the shared validation against both
-describe.each([
-  ["AgentTurnOutput", AgentTurnOutput, validAgentTurnOutput],
-  ["Turn", Turn, validTurn],
-] as const)("%s field validation", (_, schema, valid) => {
-  it("requires narrative", () => {
-    expectInvalid(schema, omit(valid(), "narrative"), ["narrative"])
+  it.each(["stat", "difficulty", "modifier"] as const)("requires %s", (key) => {
+    expectInvalid(Check, omit(validCheck(), key), [key])
   })
 
   it.each([
-    ["fractional hpDelta", { hpDelta: 1.5 }, ["hpDelta"]],
-    ["fractional goldDelta", { goldDelta: 0.1 }, ["goldDelta"]],
-    ["xp for an unknown stat", { xpGained: { luck: 1 } }, ["xpGained"]],
-    ["fractional xp", { xpGained: { will: 0.5 } }, ["xpGained", "will"]],
-    ["an invalid gained item", { itemsGained: [{ ...validItem(), tier: -1 }] }, ["itemsGained", 0, "tier"]],
-    ["a non-string lost item id", { itemsLost: [1] }, ["itemsLost", 0]],
-    ["a non-string perk", { perksGained: [null] }, ["perksGained", 0]],
-    ["fractional renown", { reputationDelta: { renown: 0.5 } }, ["reputationDelta", "renown"]],
-    ["a non-string locationChange", { locationChange: 2 }, ["locationChange"]],
+    ["unknown stat", { stat: "luck" }, ["stat"]],
+    ["unknown difficulty", { difficulty: "impossible" }, ["difficulty"]],
+    ["unknown modifier", { modifier: "double" }, ["modifier"]],
+  ])("rejects %s", (_, overrides, path) => {
+    expectInvalid(Check, { ...validCheck(), ...overrides }, path)
+  })
+
+  it("keeps the Difficulty and AdvantageModifier types in sync with the enums", () => {
+    expectTypeOf<Difficulty>().toEqualTypeOf<z.infer<typeof Check>["difficulty"]>()
+    expectTypeOf<AdvantageModifier>().toEqualTypeOf<z.infer<typeof Check>["modifier"]>()
+  })
+})
+
+describe("Branch", () => {
+  it("defaults effects to an empty list", () => {
+    expect(expectValid(Branch, validBranch())).toEqual({ ...validBranch(), effects: [] })
+  })
+
+  it("accepts effects and applies their defaults", () => {
+    const branch = expectValid(Branch, { ...validBranch(), effects: [{ kind: "loseItem", itemId: "item-1" }] })
+    expect(branch.effects).toEqual([{ kind: "loseItem", itemId: "item-1", qty: 1 }])
+  })
+
+  it("requires narrative", () => {
+    expectInvalid(Branch, {}, ["narrative"])
+  })
+
+  it("rejects an invalid effect", () => {
+    expectInvalid(Branch, { ...validBranch(), effects: [{ kind: "heal", amount: -1 }] }, ["effects", 0, "amount"])
+  })
+})
+
+describe("AgentTurnOutput", () => {
+  it("accepts an empty output and defaults choices", () => {
+    const output = expectValid(AgentTurnOutput, {})
+    expect(output).toEqual({ choices: [] })
+    expect(output).not.toHaveProperty("check")
+    expect(output).not.toHaveProperty("onSuccess")
+    expect(output).not.toHaveProperty("onFailure")
+  })
+
+  it("accepts a check with both branches and applies nested defaults", () => {
+    const output = expectValid(AgentTurnOutput, { ...validAgentTurnOutput(), choices: [validChoice()] })
+    expect(output).toEqual({
+      check: validCheck(),
+      onSuccess: { ...validBranch(), effects: [] },
+      onFailure: { narrative: "The guard spots you.", effects: [{ kind: "damage", amount: 3 }] },
+      choices: [validChoice()],
+    })
+  })
+
+  it.each([
+    ["an invalid check", { check: { ...validCheck(), difficulty: "trivial" } }, ["check", "difficulty"]],
+    ["an onSuccess branch without narrative", { onSuccess: {} }, ["onSuccess", "narrative"]],
+    [
+      "an invalid onFailure effect",
+      { onFailure: { narrative: "Ouch", effects: [{ kind: "damage", amount: 1.5 }] } },
+      ["onFailure", "effects", 0, "amount"],
+    ],
     ["an invalid choice", { choices: [{ id: "c", label: str(101) }] }, ["choices", 0, "label"]],
   ])("rejects %s", (_, overrides, path) => {
-    expectInvalid(schema, { ...valid(), ...overrides }, path)
+    expectInvalid(AgentTurnOutput, { ...validAgentTurnOutput(), ...overrides }, path)
   })
 })
 
 describe("Turn", () => {
   it("applies defaults to a minimal turn", () => {
-    expect(expectValid(Turn, validTurn())).toEqual({ ...validTurn(), ...turnDefaults })
+    expect(expectValid(Turn, validTurn())).toEqual({ ...validTurn(), effects: [], choices: [] })
   })
 
-  it("has exactly AgentTurnOutput's fields plus id and timestamp", () => {
-    const expected = [...Object.keys(AgentTurnOutput.shape), "id", "timestamp"].sort()
-    expect(Object.keys(Turn.shape).sort()).toEqual(expected)
+  it("accepts effects and choices", () => {
+    const input = {
+      ...validTurn(),
+      effects: [
+        { kind: "gold", amount: -5 },
+        { kind: "move", sceneId: "scene-2" },
+      ],
+      choices: [validChoice()],
+    }
+    expect(expectValid(Turn, input)).toEqual(input)
   })
 
-  it("accepts an agent output extended with id and timestamp", () => {
-    const output = expectValid(AgentTurnOutput, { ...validAgentTurnOutput(), hpDelta: -2 })
-    const turn = expectValid(Turn, { ...output, id: "turn-1", timestamp: TIMESTAMP })
-    expect(turn).toEqual({ ...output, id: "turn-1", timestamp: TIMESTAMP })
-  })
-
-  it.each(["id", "timestamp"] as const)("requires %s", (key) => {
+  it.each(["id", "narrative", "timestamp"] as const)("requires %s", (key) => {
     expectInvalid(Turn, omit(validTurn(), key), [key])
   })
 
-  it("rejects a malformed timestamp", () => {
-    expectInvalid(Turn, { ...validTurn(), timestamp: "not a date" }, ["timestamp"])
+  it.each([
+    ["a malformed timestamp", { timestamp: "not a date" }, ["timestamp"]],
+    ["an invalid effect", { effects: [{ kind: "xp", stat: "luck", amount: 1 }] }, ["effects", 0, "stat"]],
+    ["an unknown effect kind", { effects: [{ kind: "teleport" }] }, ["effects", 0, "kind"]],
+    ["an invalid choice", { choices: [{ label: "Go" }] }, ["choices", 0, "id"]],
+  ])("rejects %s", (_, overrides, path) => {
+    expectInvalid(Turn, { ...validTurn(), ...overrides }, path)
   })
 })
 

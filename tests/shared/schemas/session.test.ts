@@ -21,12 +21,16 @@ describe("GameSession", () => {
     expect(expectValid(GameSession, input)).toEqual(input)
   })
 
+  it.each([0, -98765, 4294967295])("accepts rootSeed %d", (rootSeed) => {
+    expect(expectValid(GameSession, { ...validSession(), rootSeed }).rootSeed).toBe(rootSeed)
+  })
+
   it("applies scene defaults to nested scenes", () => {
     const session = expectValid(GameSession, { ...validSession(), scenes: [validScene()] })
     expect(session.scenes[0]).toMatchObject({ exits: [], tags: [] })
   })
 
-  it.each(["id", "userId", "characterId", "currentSceneId", "createdAt", "updatedAt"] as const)(
+  it.each(["id", "userId", "characterId", "currentSceneId", "createdAt", "updatedAt", "rootSeed"] as const)(
     "requires %s",
     (key) => {
       expectInvalid(GameSession, omit(validSession(), key), [key])
@@ -46,6 +50,9 @@ describe("GameSession", () => {
     ["malformed updatedAt", { updatedAt: "later" }, ["updatedAt"]],
     ["an invalid scene", { scenes: [{ ...validScene(), roomName: "" }] }, ["scenes", 0, "roomName"]],
     ["an invalid recent turn", { recentTurns: [omit(validTrimmedTurn(), "action")] }, ["recentTurns", 0, "action"]],
+    ["a string rootSeed", { rootSeed: "12345" }, ["rootSeed"]],
+    ["a non-finite rootSeed", { rootSeed: Infinity }, ["rootSeed"]],
+    ["a rootSeed outside float32 range", { rootSeed: 1e39 }, ["rootSeed"]],
   ])("rejects %s", (_, overrides, path) => {
     expectInvalid(GameSession, { ...validSession(), ...overrides }, path)
   })

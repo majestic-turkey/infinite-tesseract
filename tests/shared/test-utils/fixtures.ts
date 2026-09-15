@@ -71,9 +71,17 @@ export const validScene = () => ({
 
 export const validChoice = () => ({ id: "choice-1", label: "Approach the bar" })
 
-export const validAgentTurnOutput = () => ({ narrative: "The door creaks open." })
+export const validCheck = () => ({ stat: "dexterity", difficulty: "medium", modifier: "none" })
 
-export const validTurn = () => ({ ...validAgentTurnOutput(), id: "turn-1", timestamp: TIMESTAMP })
+export const validBranch = () => ({ narrative: "You slip past the guard." })
+
+export const validAgentTurnOutput = () => ({
+  check: validCheck(),
+  onSuccess: validBranch(),
+  onFailure: { narrative: "The guard spots you.", effects: [{ kind: "damage", amount: 3 }] },
+})
+
+export const validTurn = () => ({ id: "turn-1", narrative: "The door creaks open.", timestamp: TIMESTAMP })
 
 export const validTrimmedTurn = () => ({
   turnId: "turn-1",
@@ -88,4 +96,5 @@ export const validSession = () => ({
   currentSceneId: "scene-1",
   createdAt: TIMESTAMP,
   updatedAt: TIMESTAMP,
+  rootSeed: 12345,
 })
