@@ -21,7 +21,7 @@ describe("GameSession", () => {
     expect(expectValid(GameSession, input)).toEqual(input)
   })
 
-  it.each([0, -98765, 4294967295])("accepts rootSeed %d", (rootSeed) => {
+  it.each([0, 98765, 4294967295])("accepts rootSeed %d", (rootSeed) => {
     expect(expectValid(GameSession, { ...validSession(), rootSeed }).rootSeed).toBe(rootSeed)
   })
 

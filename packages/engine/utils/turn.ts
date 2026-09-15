@@ -1,0 +1,1 @@
+// Turn orchestration - resolveTurn(state, action, agentOutput, { rng, now }). It resolves the check, picks the branch, applies its effects, checks for rank-ups, creates the Turn, increments turnCount, adds to and trims recentTurns, and sets updatedAt.

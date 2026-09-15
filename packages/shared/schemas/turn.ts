@@ -1,5 +1,4 @@
 import { z } from "zod"
-import { Item } from "./items.js"
 import { StatName } from "./stats.js"
 import { Effect } from "./effect.js"
 

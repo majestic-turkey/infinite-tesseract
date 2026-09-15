@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { applyEffect, applyEffects, type GameState } from "../../packages/engine/engine.js"
+import { applyEffect, applyEffects, type GameState } from "../../packages/engine/utils/effects.js"
 import { Character, GameSession, Item, type Effect } from "../../packages/shared/schemas.js"
 import { validCharacter, validItem, validSession } from "../shared/test-utils/fixtures.js"
 

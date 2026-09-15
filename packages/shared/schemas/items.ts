@@ -24,7 +24,7 @@ export const Item = z.object({
   id: z.string(),
   name: z.string(),                   // AI supplies the flavor name
   category: ItemType,
-  tier: z.number().int().min(0),      // engine derives stats from category + tier
+  tier: z.number().int().min(0),      // power level; bonuses are stored per item, not derived from tier
   slot: Slot.optional(),              // present = equippable
   twoHanded: z.boolean().default(false), // only relevant for weapons
   bonuses: z.partialRecord(StatName, z.number().int()).default({}), // stat bonuses provided by the item

@@ -1,5 +1,5 @@
 import { Stat } from "./stats.js"
-import { Slot, Item } from "./items.js"
+import { Item, Slot } from "./items.js"
 import { z } from "zod"
 
 export const Character = z.object({

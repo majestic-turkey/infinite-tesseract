@@ -1,0 +1,1 @@
+// Check resolution - returns whether it succeeded, and roll details. Includes modifiers and difficulty.
