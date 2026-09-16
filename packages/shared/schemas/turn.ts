@@ -55,6 +55,8 @@ export const TrimmedTurn = z.object({
 
 export type StatDelta = z.infer<typeof StatDelta>
 export type Choice = z.infer<typeof Choice>
+export type Check = z.infer<typeof Check>
+export type Branch = z.infer<typeof Branch>
 export type PlayerAction = z.infer<typeof PlayerAction>
 export type AgentTurnOutput = z.infer<typeof AgentTurnOutput>
 export type Turn = z.infer<typeof Turn>

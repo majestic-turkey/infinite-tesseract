@@ -63,7 +63,7 @@ export function applyEffect(s: GameState, e: Effect): GameState {
       }
 }
 
-// Apply a whole turn's effects in order.
+// Apply a whole turn's effects in order
 export function applyEffects(s: GameState, effects: readonly Effect[]): GameState {
   return effects.reduce(applyEffect, s)
 }
