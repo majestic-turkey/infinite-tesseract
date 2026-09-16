@@ -1,6 +1,7 @@
 // Check resolution - returns whether it succeeded, and roll details. Includes modifiers and difficulty
 import type { Character, Check } from "../../shared/schemas.js"
 import { effectiveStats } from "./stats.js"
+import type { Rng } from "./rng.js"
 
 // Target number a d20 + effective rank has to reach
 export const DIFFICULTY_CLASS = {
@@ -18,9 +19,6 @@ export type CheckResult = {
   rolls: number[] // every die rolled, in order
   total: number // roll + rank
 }
-
-// rng returns a float in [0, 1) — mulberry32's output.
-export type Rng = () => number
 
 const d20 = (rng: Rng) => Math.floor(rng() * 20) + 1
 

@@ -45,6 +45,7 @@ const CheckedTurn = z.object({
   choices: z.array(Choice).default([]),
 })
 
+
 export const AgentTurnOutput = z.discriminatedUnion("kind", [NarrativeTurn, CheckedTurn])
 
 export const Turn = z.object({
@@ -67,5 +68,6 @@ export type Check = z.infer<typeof Check>
 export type Branch = z.infer<typeof Branch>
 export type PlayerAction = z.infer<typeof PlayerAction>
 export type AgentTurnOutput = z.infer<typeof AgentTurnOutput>
+export type CheckedTurn = z.infer<typeof CheckedTurn>
 export type Turn = z.infer<typeof Turn>
 export type TrimmedTurn = z.infer<typeof TrimmedTurn>

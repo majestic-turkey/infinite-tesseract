@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest"
 import { applyEffect, applyEffects, type GameState } from "../../packages/engine/utils/effects.js"
-import { Character, GameSession, Item, type Effect } from "../../packages/shared/schemas.js"
+import { resolveTurn } from "../../packages/engine/utils/turn.js"
+import { Character, GameSession, Item, type AgentTurnOutput, type Effect } from "../../packages/shared/schemas.js"
 import { validCharacter, validItem, validSession } from "../shared/test-utils/fixtures.js"
 
 const state = (): GameState => ({
@@ -133,5 +134,67 @@ describe("applyEffects", () => {
     // At full hp (20/20) healing first is wasted by the clamp
     expect(applyEffects(state(), [heal, damage]).character.hp).toBe(10)
     expect(applyEffects(state(), [damage, heal]).character.hp).toBe(15)
+  })
+})
+
+describe("resolveTurn", () => {
+  it("resolves a narration turn and records it in the session", () => {
+    const before = state()
+    const action = { text: "Look around" }
+    const output: AgentTurnOutput = {
+      kind: "narration",
+      outcome: {
+        narrative: "You inspect the dusty room.",
+        effects: [{ kind: "gold", amount: 2 }],
+      },
+      choices: [{ id: "look", label: "Look around" }],
+    }
+
+    const result = resolveTurn(before, action, output, { now: "2026-09-16T00:00:00Z" })
+
+    expect(result.check).toBeUndefined()
+    expect(result.turn).toMatchObject({
+      id: "turn-1",
+      narrative: "You inspect the dusty room.",
+      effects: [{ kind: "gold", amount: 2 }],
+      choices: [{ id: "look", label: "Look around" }],
+      timestamp: "2026-09-16T00:00:00Z",
+    })
+    expect(result.state.character.gold).toBe(17)
+    expect(result.state.session.turnCount).toBe(1)
+    expect(result.state.session.recentTurns[0]).toMatchObject({
+      turnId: "turn-1",
+      narrative: "You inspect the dusty room.",
+      action: "Look around",
+    })
+  })
+
+  it("resolves a check branch, applies its effects, and advances the turn state", () => {
+    const before = state()
+    const action = { text: "Sneak past", selectedChoiceId: "sneak" }
+    const output: AgentTurnOutput = {
+      kind: "check",
+      check: { stat: "dexterity", difficulty: "medium", modifier: "none" },
+      onSuccess: {
+        narrative: "You slip past the guard.",
+        effects: [{ kind: "xp", stat: "dexterity", amount: 25 }],
+      },
+      onFailure: {
+        narrative: "The guard notices.",
+        effects: [{ kind: "xp", stat: "dexterity", amount: 5 }],
+      },
+      choices: [{ id: "sneak", label: "Sneak past" }],
+    }
+
+    const result = resolveTurn(before, action, output, {
+      rng: () => 0,
+      now: "2026-09-16T00:00:00Z",
+    })
+
+    expect(result.check?.success).toBe(false)
+    expect(result.turn.narrative).toBe("The guard notices.")
+    expect(result.state.character.stats.dexterity.xp).toBe(30)
+    expect(result.state.session.turnCount).toBe(1)
+    expect(result.state.session.updatedAt).toBe("2026-09-16T00:00:00Z")
   })
 })

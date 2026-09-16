@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
-import { DIFFICULTY_CLASS, resolveCheck, type Rng } from "../../packages/engine/utils/checks.js"
+import { DIFFICULTY_CLASS, resolveCheck } from "../../packages/engine/utils/checks.js"
+import type { Rng } from "../../packages/engine/utils/rng.js"
 import { Character, Check, Item } from "../../packages/shared/schemas.js"
 import { validCharacter, validCheck, validItem } from "../shared/test-utils/fixtures.js"
 
