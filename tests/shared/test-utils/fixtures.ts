@@ -76,9 +76,11 @@ export const validCheck = () => ({ stat: "dexterity", difficulty: "medium", modi
 export const validBranch = () => ({ narrative: "You slip past the guard." })
 
 export const validAgentTurnOutput = () => ({
+  kind: "check",
   check: validCheck(),
   onSuccess: validBranch(),
   onFailure: { narrative: "The guard spots you.", effects: [{ kind: "damage", amount: 3 }] },
+  choices: [],
 })
 
 export const validTurn = () => ({ id: "turn-1", narrative: "The door creaks open.", timestamp: TIMESTAMP })

@@ -31,13 +31,21 @@ export const Branch = z.object({
     effects: z.array(Effect).default([]),
 })
 
-export const AgentTurnOutput = z.object({
-  check: Check.optional(),
-  onSuccess: Branch.optional(),
-  onFailure: Branch.optional(),
+const NarrativeTurn = z.object({
+  kind: z.literal("narration"),
+  outcome: Branch,                       // Only one outcome, no choices
   choices: z.array(Choice).default([]),
 })
 
+const CheckedTurn = z.object({
+  kind: z.literal("check"),
+  check: Check,                          // Can be either success or failure based on dice roll
+  onSuccess: Branch,
+  onFailure: Branch,
+  choices: z.array(Choice).default([]),
+})
+
+export const AgentTurnOutput = z.discriminatedUnion("kind", [NarrativeTurn, CheckedTurn])
 
 export const Turn = z.object({
     id: z.string(),
