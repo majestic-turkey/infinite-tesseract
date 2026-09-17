@@ -1,7 +1,6 @@
-import { applyEffect } from "./effects.js"
+import { applyEffects } from "./effects.js"
 import type { GameState } from "./effects.js"
 import { resolveCheck, type CheckResult } from "./checks.js"
-import { rankUp } from "./progression.js"
 import { mulberry32 } from "./rng.js"
 import type { Rng } from "./rng.js"
 import type { AgentTurnOutput, Effect, PlayerAction, Turn, TrimmedTurn } from "../../shared/schemas.js"
@@ -31,39 +30,24 @@ function chosenActionText(action: PlayerAction, choices: readonly { id: string; 
     return action.text
 }
 
-function applyBranchEffects(state: GameState, effects: readonly Effect[]): GameState {
-    let next = state
-    for (const effect of effects) {
-        if (effect.kind === "xp") {
-            next = {
-                ...next,
-                character: rankUp(next.character, { stat: effect.stat, amount: effect.amount }),
-            }
-            continue
-        }
-        next = applyEffect(next, effect)
-    }
-    return next
-}
-
 export function resolveTurn(state: GameState, action: PlayerAction, agentOutput: AgentTurnOutput, ctx: TurnContext):
     TurnResult {
     const { rootSeed, turnCount } = state.session
     const rng = ctx.rng ?? mulberry32(turnSeed(rootSeed, turnCount))
-    const choices = agentOutput.choices ?? []
+    const choices = agentOutput.choices
     const turnId = `turn-${turnCount + 1}`
     const actionText = chosenActionText(action, choices)
 
     if (agentOutput.kind === "narration") {
         const outcome = agentOutput.outcome
-        const applied = applyBranchEffects(state, outcome.effects)
+        const applied = applyEffects(state, outcome.effects)
         const nextSession = {
             ...applied.session,
             turnCount: applied.session.turnCount + 1,
             updatedAt: ctx.now,
             recentTurns: [
-                { turnId, narrative: outcome.narrative, action: actionText } satisfies TrimmedTurn,
-                ...applied.session.recentTurns,
+                { turnId, narrative: outcome.narrative.slice(0,500), action: actionText.slice(0,200) } satisfies TrimmedTurn,
+                ...applied.session.recentTurns.slice(0,10),
             ],
         }
 
@@ -83,14 +67,14 @@ export function resolveTurn(state: GameState, action: PlayerAction, agentOutput:
 
     const check = resolveCheck(state.character, agentOutput.check, rng)
     const branch = check.success ? agentOutput.onSuccess : agentOutput.onFailure
-    const applied = applyBranchEffects(state, branch.effects)
+    const applied = applyEffects(state, branch.effects)
     const nextSession = {
         ...applied.session,
         turnCount: applied.session.turnCount + 1,
         updatedAt: ctx.now,
         recentTurns: [
-            { turnId, narrative: branch.narrative, action: actionText } satisfies TrimmedTurn,
-            ...applied.session.recentTurns,
+            { turnId, narrative: branch.narrative.slice(0,500), action: actionText.slice(0,200) } satisfies TrimmedTurn,
+            ...applied.session.recentTurns.slice(0,9),
         ],
     }
 

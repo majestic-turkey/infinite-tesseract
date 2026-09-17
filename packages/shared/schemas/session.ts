@@ -1,6 +1,6 @@
 import { z } from "zod"
 import { Scene } from "./scene.js"
-import { PlayerAction, Turn, TrimmedTurn } from "./turn.js"
+import { TrimmedTurn } from "./turn.js"
 
 export const GameSession = z.object({
   id: z.string(),
