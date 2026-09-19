@@ -1,0 +1,1 @@
+// Interface narrator. nextTurn takes state and an actionText and returns AgentTurnOutput as a promise
