@@ -270,8 +270,18 @@ describe("resolveTurn", () => {
   })
 
   it("uses the selected choice label for the stored action text in recent turns", () => {
-    const before = state()
-    const action = { text: "Take the risky shortcut", selectedChoiceId: "shortcut" }
+    const base = state()
+    const before = {
+      ...base,
+      session: {
+        ...base.session,
+        pendingChoices: [
+          { id: "shortcut", label: "Slip between crates" },
+          { id: "careful", label: "Pause and listen" },
+        ],
+      },
+    }
+    const action = { text: "Do something else", selectedChoiceId: "shortcut" }
     const output: AgentTurnOutput = {
       kind: "narration",
       outcome: {
@@ -286,7 +296,7 @@ describe("resolveTurn", () => {
     expect(result.state.session.recentTurns[0]).toMatchObject({
       turnId: "turn-1",
       narrative: "You slip between the crates.",
-      action: "Take the risky shortcut",
+      action: "Slip between crates",
     })
     expect(result.state.session.currentSceneId).toBe("scene-2")
   })

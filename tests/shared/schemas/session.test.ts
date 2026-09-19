@@ -5,7 +5,7 @@ import { expectInvalid, expectValid, omit, validScene, validSession, validTrimme
 describe("GameSession", () => {
   it("applies defaults to a minimal session", () => {
     const session = expectValid(GameSession, validSession())
-    expect(session).toEqual({ ...validSession(), scenes: [], turnCount: 0, summary: "", recentTurns: [] })
+    expect(session).toEqual({ ...validSession(), scenes: [], turnCount: 0, pendingChoices: [], summary: "", recentTurns: [] })
     expect(session).not.toHaveProperty("title")
   })
 
@@ -15,6 +15,7 @@ describe("GameSession", () => {
       title: "The Long Road",
       scenes: [{ ...validScene(), characters: [], enemies: [], items: [], exits: [], tags: [] }],
       turnCount: 12,
+      pendingChoices: [],
       summary: "Aria arrived in town.",
       recentTurns: [validTrimmedTurn()],
     }

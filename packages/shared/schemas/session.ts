@@ -1,6 +1,6 @@
 import { z } from "zod"
 import { Scene } from "./scene.js"
-import { TrimmedTurn } from "./turn.js"
+import { TrimmedTurn, Choice } from "./turn.js"
 
 export const GameSession = z.object({
   id: z.string(),
@@ -12,7 +12,7 @@ export const GameSession = z.object({
   turnCount: z.number().int().min(0).default(0),
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(), // last save
-  // Trimmed history for agent memory
+  pendingChoices: z.array(Choice).default([]),
   summary: z.string().default(""),
   recentTurns: z.array(TrimmedTurn).default([]), // most recent turns for agent memory
   rootSeed: z.number().int().min(0).max(0xFFFFFFFF),
