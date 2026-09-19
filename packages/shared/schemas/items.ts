@@ -1,5 +1,4 @@
 import { z } from "zod"
-import { StatName } from "./stats.js"
 
 export const Slot = z.enum([
     "head",
@@ -27,7 +26,12 @@ export const Item = z.object({
   tier: z.number().int().min(0),      // power level; bonuses are stored per item, not derived from tier
   slot: Slot.optional(),              // present = equippable
   twoHanded: z.boolean().default(false), // only relevant for weapons
-  bonuses: z.partialRecord(StatName, z.number().int()).default({}), // stat bonuses provided by the item
+  bonuses: z.strictObject({
+    strength: z.number().int().optional(),
+    dexterity: z.number().int().optional(),
+    will: z.number().int().optional(),
+    charisma: z.number().int().optional(),
+  }).default({}), // stat bonuses provided by the item
   qty: z.number().int().min(1).default(1), // quantity of the item in the inventory
 })
 

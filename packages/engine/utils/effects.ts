@@ -1,10 +1,33 @@
-import type { Character, GameSession, Effect, Slot } from "../../shared/schemas.js"
+import type { Character, GameSession, Effect, Item, Slot } from "../../shared/schemas.js"
 import { rankUp } from "./progression.js"
 
 // A turn mutates both the character and the session, so the reducer operates
 // over the whole game state rather than the Character alone
 
 export type GameState = { character: Character; session: GameSession }
+
+function nextUniqueId(baseId: string, existingIds: ReadonlySet<string>): string {
+    if (!existingIds.has(baseId)) return baseId
+    let suffix = 2
+    let candidate = `${baseId}-${suffix}`
+    while (existingIds.has(candidate)) {
+        suffix += 1
+        candidate = `${baseId}-${suffix}`
+    }
+    return candidate
+}
+
+function sameItemDefinition(a: Item, b: Item): boolean {
+    return a.name === b.name
+        && a.category === b.category
+        && a.tier === b.tier
+        && a.slot === b.slot
+        && a.twoHanded === b.twoHanded
+        && a.bonuses.strength === b.bonuses.strength
+        && a.bonuses.dexterity === b.bonuses.dexterity
+        && a.bonuses.will === b.bonuses.will
+        && a.bonuses.charisma === b.bonuses.charisma
+}
 
 export function applyEffect(state: GameState, effect: Effect): GameState {
     const { character } = state
@@ -18,11 +41,16 @@ export function applyEffect(state: GameState, effect: Effect): GameState {
         case "xp":
             return { ...state, character: rankUp(character, effect) }
         case "gainItem": {
-            const exists = character.inventory.some((item) => item.id === effect.item.id)
-            const inventory = exists
-                ? character.inventory.map((item) =>
+            const existing = character.inventory.find((item) => item.id === effect.item.id)
+            if (existing && sameItemDefinition(existing, effect.item)) {
+                const inventory = character.inventory.map((item) =>
                     item.id === effect.item.id ? { ...item, qty: item.qty + effect.item.qty } : item)
-                : [...character.inventory, effect.item]
+                return { ...state, character: { ...character, inventory } }
+            }
+
+            const usedIds = new Set(character.inventory.map((item) => item.id))
+            const itemId = nextUniqueId(effect.item.id, usedIds)
+            const inventory = [...character.inventory, itemId === effect.item.id ? effect.item : { ...effect.item, id: itemId }]
             return { ...state, character: { ...character, inventory } }
         }
         case "loseItem":
@@ -63,20 +91,21 @@ export function applyEffect(state: GameState, effect: Effect): GameState {
             if (!currentScene) return state
 
             // New scene: add it, add an exit to it from here, and move in
-            if (effect.newScene) {
+            if ("newScene" in effect) {
                 const { scene, exitLabel } = effect.newScene
-                if (session.scenes.some((known) => known.id === scene.id)) return state
+                const usedIds = new Set(session.scenes.map((known) => known.id))
+                const sceneId = nextUniqueId(scene.id, usedIds)
+                const sceneToAdd = sceneId === scene.id ? scene : { ...scene, id: sceneId }
                 const scenes = session.scenes.map((known) =>
                     known.id === currentScene.id
-                        ? { ...known, exits: [...known.exits, { label: exitLabel, toSceneId: scene.id }] }
+                        ? { ...known, exits: [...known.exits, { label: exitLabel, toSceneId: sceneToAdd.id }] }
                         : known,
                 )
-                return { ...state, session: { ...session, scenes: [...scenes, scene], currentSceneId: scene.id } }
+                return { ...state, session: { ...session, scenes: [...scenes, sceneToAdd], currentSceneId: sceneToAdd.id } }
             }
 
             // Known scene: needs an exit from here, and the scene must actually exist
             const { sceneId } = effect
-            if (sceneId === undefined) return state
             if (!currentScene.exits.some((exit) => exit.toSceneId === sceneId)) return state
             if (!session.scenes.some((known) => known.id === sceneId)) return state
             return { ...state, session: { ...session, currentSceneId: sceneId } }
