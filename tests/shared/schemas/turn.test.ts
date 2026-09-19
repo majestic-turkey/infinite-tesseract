@@ -132,17 +132,22 @@ describe("Branch", () => {
 })
 
 describe("AgentTurnOutput", () => {
-  it("accepts an empty output and defaults choices", () => {
-    const output = expectValid(AgentTurnOutput, {})
-    expect(output).toEqual({ choices: [] })
-    expect(output).not.toHaveProperty("check")
-    expect(output).not.toHaveProperty("onSuccess")
-    expect(output).not.toHaveProperty("onFailure")
+  it("accepts a narration turn and defaults choices", () => {
+    const output = expectValid(AgentTurnOutput, {
+      kind: "narration",
+      outcome: validBranch(),
+    })
+    expect(output).toEqual({
+      kind: "narration",
+      outcome: { ...validBranch(), effects: [] },
+      choices: [],
+    })
   })
 
   it("accepts a check with both branches and applies nested defaults", () => {
     const output = expectValid(AgentTurnOutput, { ...validAgentTurnOutput(), choices: [validChoice()] })
     expect(output).toEqual({
+      kind: "check",
       check: validCheck(),
       onSuccess: { ...validBranch(), effects: [] },
       onFailure: { narrative: "The guard spots you.", effects: [{ kind: "damage", amount: 3 }] },
@@ -151,14 +156,14 @@ describe("AgentTurnOutput", () => {
   })
 
   it.each([
-    ["an invalid check", { check: { ...validCheck(), difficulty: "trivial" } }, ["check", "difficulty"]],
-    ["an onSuccess branch without narrative", { onSuccess: {} }, ["onSuccess", "narrative"]],
+    ["an invalid check", { kind: "check", check: { ...validCheck(), difficulty: "trivial" } }, ["check", "difficulty"]],
+    ["an onSuccess branch without narrative", { kind: "check", onSuccess: {} }, ["onSuccess", "narrative"]],
     [
       "an invalid onFailure effect",
-      { onFailure: { narrative: "Ouch", effects: [{ kind: "damage", amount: 1.5 }] } },
+      { kind: "check", onFailure: { narrative: "Ouch", effects: [{ kind: "damage", amount: 1.5 }] } },
       ["onFailure", "effects", 0, "amount"],
     ],
-    ["an invalid choice", { choices: [{ id: "c", label: str(101) }] }, ["choices", 0, "label"]],
+    ["an invalid choice", { kind: "check", choices: [{ id: "c", label: str(101) }] }, ["choices", 0, "label"]],
   ])("rejects %s", (_, overrides, path) => {
     expectInvalid(AgentTurnOutput, { ...validAgentTurnOutput(), ...overrides }, path)
   })

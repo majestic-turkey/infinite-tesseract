@@ -7,3 +7,6 @@ export function mulberry32(seed: number) {
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296
   }
 }
+
+// rng returns a float in [0, 1) — mulberry32's output.
+export type Rng = () => number

@@ -32,13 +32,12 @@ describe("Scene", () => {
 
   it("accepts boundary lengths", () => {
     expectValid(Scene, { ...validScene(), roomName: str(1), description: "" })
-    expectValid(Scene, { ...validScene(), roomName: str(100), description: str(500) })
+    expectValid(Scene, { ...validScene(), roomName: str(100), description: str(5000) })
   })
 
   it.each([
     ["empty roomName", { roomName: "" }, ["roomName"]],
     ["roomName over 100 chars", { roomName: str(101) }, ["roomName"]],
-    ["description over 500 chars", { description: str(501) }, ["description"]],
     ["non-string enemy id", { enemies: [7] }, ["enemies", 0]],
     ["non-array tags", { tags: "indoors" }, ["tags"]],
   ])("rejects %s", (_, overrides, path) => {

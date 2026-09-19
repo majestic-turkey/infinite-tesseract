@@ -69,6 +69,12 @@ export const validScene = () => ({
   description: "Smoke hangs low over the tables.",
 })
 
+// Two connected scenes for engine tests; validScene stays minimal for schema default tests
+export const validWorld = () => [
+  { ...validScene(), exits: [{ label: "Back door", toSceneId: "scene-2" }] },
+  { id: "scene-2", roomName: "Alley", description: "Wet cobbles.", exits: [{ label: "Tavern", toSceneId: "scene-1" }] },
+]
+
 export const validChoice = () => ({ id: "choice-1", label: "Approach the bar" })
 
 export const validCheck = () => ({ stat: "dexterity", difficulty: "medium", modifier: "none" })
@@ -76,9 +82,11 @@ export const validCheck = () => ({ stat: "dexterity", difficulty: "medium", modi
 export const validBranch = () => ({ narrative: "You slip past the guard." })
 
 export const validAgentTurnOutput = () => ({
+  kind: "check",
   check: validCheck(),
   onSuccess: validBranch(),
   onFailure: { narrative: "The guard spots you.", effects: [{ kind: "damage", amount: 3 }] },
+  choices: [],
 })
 
 export const validTurn = () => ({ id: "turn-1", narrative: "The door creaks open.", timestamp: TIMESTAMP })
