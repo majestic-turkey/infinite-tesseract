@@ -75,6 +75,36 @@ describe("applyEffect", () => {
       expect(after.character.inventory).toMatchObject([{ id: "item-1", qty: 4 }, { id: "item-2", qty: 1 }])
       expect(after.character.inventory[1]).toBe(other)
     })
+
+    it("assigns a new id when a generated item id collides with a different item", () => {
+      const before = state()
+      const after = applyEffect(before, {
+        kind: "gainItem",
+        item: Item.parse({ ...validItem(), id: "item-1", name: "Brass Key", category: "key", tier: 0 }),
+      })
+      expect(after.character.inventory.map((item) => item.id)).toEqual(["item-1", "item-1-2"])
+      expect(after.character.inventory[1]).toMatchObject({ id: "item-1-2", name: "Brass Key", category: "key", tier: 0 })
+    })
+
+    it("keeps incrementing collision suffixes until an unused id is found", () => {
+      const s = state()
+      const before = {
+        ...s,
+        character: {
+          ...s.character,
+          inventory: [
+            ...s.character.inventory,
+            Item.parse({ ...validItem(), id: "item-1-2", name: "Torch", category: "misc", tier: 0 }),
+          ],
+        },
+      }
+      const after = applyEffect(before, {
+        kind: "gainItem",
+        item: Item.parse({ ...validItem(), id: "item-1", name: "Brass Key", category: "key", tier: 0 }),
+      })
+      expect(after.character.inventory.map((item) => item.id)).toEqual(["item-1", "item-1-2", "item-1-3"])
+      expect(after.character.inventory[2]).toMatchObject({ id: "item-1-3", name: "Brass Key", category: "key", tier: 0 })
+    })
   })
 
   describe("loseItem", () => {
@@ -156,9 +186,9 @@ describe("applyEffect", () => {
     })
 
     it("returns the same state for a move with neither sceneId nor newScene", () => {
-      // The schema rejects this, but the Effect type allows it
+      // The schema and Effect type reject this, but runtime still guards unvalidated payloads
       const before = state()
-      expect(applyEffect(before, { kind: "move" })).toBe(before)
+      expect(applyEffect(before, { kind: "move" } as unknown as Effect)).toBe(before)
     })
 
     describe("to a new scene", () => {
@@ -183,10 +213,13 @@ describe("applyEffect", () => {
         expect(applyEffect(back, { kind: "move", sceneId: "crypt" }).session.currentSceneId).toBe("crypt")
       })
 
-      it("returns the same state when the scene id is already known", () => {
+      it("assigns a unique scene id when a generated scene id collides", () => {
         const before = state()
         const scene = Scene.parse({ ...validScene(), id: "scene-2" })
-        expect(applyEffect(before, { kind: "move", newScene: { scene, exitLabel: "Again" } })).toBe(before)
+        const after = applyEffect(before, { kind: "move", newScene: { scene, exitLabel: "Again" } })
+        expect(after.session.currentSceneId).toBe("scene-2-2")
+        expect(after.session.scenes.some((known) => known.id === "scene-2-2")).toBe(true)
+        expect(after.session.scenes[0]?.exits).toContainEqual({ label: "Again", toSceneId: "scene-2-2" })
       })
 
       it("returns the same state when the current scene is not in the world", () => {

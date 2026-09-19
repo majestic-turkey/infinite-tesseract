@@ -22,7 +22,35 @@ export function expectValid<S extends z.ZodType>(schema: S, input: unknown): z.o
 export function expectInvalid(schema: z.ZodType, input: unknown, path: PropertyKey[] = []) {
   const result = schema.safeParse(input)
   expect(result.success, "expected parse to fail").toBe(false)
-  const paths = result.error?.issues.map((issue) => issue.path) ?? []
+
+  const collectIssuePaths = (issue: z.ZodIssue, prefix: PropertyKey[] = []): PropertyKey[][] => {
+    const currentPath = [...prefix, ...issue.path]
+    const paths: PropertyKey[][] = [currentPath]
+    const nested = issue as z.ZodIssue & { errors?: unknown[]; unionErrors?: Array<{ issues: z.ZodIssue[] }> }
+
+    // Zod union errors can nest per-branch issues under `errors` (v4) or `unionErrors` (v3-style).
+    if (Array.isArray(nested.errors)) {
+      for (const branch of nested.errors) {
+        if (Array.isArray(branch)) {
+          for (const child of branch) {
+            paths.push(...collectIssuePaths(child as z.ZodIssue, currentPath))
+          }
+        }
+      }
+    }
+
+    if (Array.isArray(nested.unionErrors)) {
+      for (const branch of nested.unionErrors) {
+        for (const child of branch.issues) {
+          paths.push(...collectIssuePaths(child, currentPath))
+        }
+      }
+    }
+
+    return paths
+  }
+
+  const paths = result.error?.issues.flatMap((issue) => collectIssuePaths(issue)) ?? []
   const matched = paths.some((p) => path.every((key, i) => p[i] === key))
   expect(matched, `no issue at [${path.join(".")}]; got ${JSON.stringify(paths)}`).toBe(true)
 }
