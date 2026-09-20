@@ -1,5 +1,7 @@
 import { expect } from "vitest"
 import { z } from "zod"
+import type { GameState } from "../../../packages/engine/engine.js"
+import { Character, GameSession } from "../../../packages/shared/schemas.js"
 
 export const TIMESTAMP = "2026-09-14T12:00:00Z"
 
@@ -133,4 +135,12 @@ export const validSession = () => ({
   createdAt: TIMESTAMP,
   updatedAt: TIMESTAMP,
   rootSeed: 12345,
+})
+
+export const validGameState = (): GameState => ({
+  character: Character.parse(validCharacter()),
+  session: GameSession.parse({
+    ...validSession(),
+    scenes: validWorld(),
+  }),
 })

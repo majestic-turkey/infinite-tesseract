@@ -22,7 +22,7 @@ function turnSeed(rootSeed: number, turnCount: number): number {
     return rootSeed + turnCount
 }
 
-function chosenActionText(action: PlayerAction, choices: readonly { id: string; label: string }[] = []): string {
+export function chosenActionText(action: PlayerAction, choices: readonly { id: string; label: string }[] = []): string {
     if (action.selectedChoiceId) {
         const match = choices.find((choice) => choice.id === action.selectedChoiceId)
         if (match) return match.label
