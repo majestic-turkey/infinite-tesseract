@@ -31,21 +31,12 @@ const makeState = (): GameState => ({
 })
 
 describe("generatePrompt", () => {
-  it("renders game context, resolves selected choices, and defaults missing gold to 0", () => {
-    const base = makeState()
-    const state: GameState = {
-      ...base,
-      character: {
-        ...base.character,
-        gold: undefined,
-      },
-    }
-
-    const prompt = generatePrompt(state, { text: "Ignore me", selectedChoiceId: "choice-1" })
+  it("renders game context and resolves selected choices", () => {
+    const prompt = generatePrompt(makeState(), { text: "Ignore me", selectedChoiceId: "choice-1" })
 
     expect(prompt).toContain("=== Character ===")
     expect(prompt).toContain("name: Aria")
-    expect(prompt).toContain("Gold on hand: 0")
+    expect(prompt).toContain("Gold on hand: 15")
     expect(prompt).toContain("Summary: A hush falls over the tavern.")
     expect(prompt).toContain("Current Scene: \"Dusty Tavern\"")
     expect(prompt).toContain("\"toSceneRoomName\": \"Alley\"")
@@ -88,23 +79,17 @@ describe("generatePrompt", () => {
     expect(() => generatePrompt(state, { text: "Look around" })).toThrow("Current scene not found")
   })
 
-  it("handles scenes without exits", () => {
+  it("handles a scene with no exits", () => {
     const base = makeState()
     const state: GameState = {
       ...base,
-      session: {
+      session: GameSession.parse({
         ...base.session,
-        scenes: [
-          {
-            ...base.session.scenes[0]!,
-            exits: undefined as unknown as typeof base.session.scenes[number]["exits"],
-          },
-          ...base.session.scenes.slice(1),
-        ],
-      },
+        scenes: [{ ...validWorld()[0], exits: [] }, validWorld()[1]],
+      }),
     }
 
     const prompt = generatePrompt(state, { text: "Wait" })
-    expect(prompt).toContain("Exits: undefined")
+    expect(prompt).toContain("Exits: []")
   })
 })

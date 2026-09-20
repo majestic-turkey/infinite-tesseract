@@ -34,7 +34,7 @@ name: ${character.name}
 background: ${character.background}
 stats: ${JSON.stringify(characterEffectiveStats, null, 2)}
 hp: ${character.hp} / ${character.maxHp}
-Gold on hand: ${character.gold ?? 0}
+Gold on hand: ${character.gold}
 Perks: ${JSON.stringify(character.perks, null, 2)}
 Renown: ${character.reputation.renown}
 Morality: ${character.reputation.morality}
@@ -45,7 +45,7 @@ Inventory: ${JSON.stringify(character.inventory, null, 2)}
     const currentStatePrompt = `=== Current State ===
 Summary: ${summary}
 Current Scene: ${JSON.stringify(scene.roomName, null, 2)} (tags: ${JSON.stringify(scene.tags, null, 2)})
-Description: ${scene.description ?? "No description available."}
+Description: ${scene.description}
 Exits: ${JSON.stringify(exitsWithDetails, null, 2)}
 Recent Turns: ${JSON.stringify(recentTurns.toReversed(), null, 2)}
 `
