@@ -23,6 +23,27 @@ describe("accessionOutput", () => {
     })
   })
 
+  it("leaves non-gainItem effects unchanged", () => {
+    const result = accessionOutput(
+      {
+        kind: "check",
+        check: { stat: "dexterity", difficulty: "medium", modifier: "none" },
+        onSuccess: {
+          narrative: "You slip past.",
+          effects: [{ kind: "heal", amount: 2 }],
+        },
+        onFailure: {
+          narrative: "You slip and fall.",
+          effects: [],
+        },
+        choices: [],
+      },
+      9,
+    )
+
+    expect(result.onSuccess.effects).toEqual([{ kind: "heal", amount: 2 }])
+  })
+
   it("adds ids to gainItem effects in check branches", () => {
     const result = accessionOutput(
       {
