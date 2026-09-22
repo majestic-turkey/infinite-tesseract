@@ -3,7 +3,7 @@ import { StatName } from "./stats.js"
 import { Item } from "./items.js"
 import { Scene } from "./scene.js"
 
-const MoveKnownScene = z.strictObject({
+export const MoveKnownScene = z.strictObject({
     kind: z.literal("move"),
     sceneId: z.string(),
 })
