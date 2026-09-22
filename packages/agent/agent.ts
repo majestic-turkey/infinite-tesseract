@@ -1,4 +1,3 @@
-// Narrator implementation. Test with Claude, chatGPT, and some HuggingFace models
 import type { Narrator } from "./narrator.js"
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod"
 import { AgentTurnOutput, WireAgentTurnOutput } from "../shared/schemas.js"
@@ -28,7 +27,3 @@ export function createClaudeNarrator(config: ClaudeNarratorConfig = {}): Narrato
         },
     }
 }
-
-zodOutputFormat(WireAgentTurnOutput)
-
-const claude = createClaudeNarrator(claudeConfig)
