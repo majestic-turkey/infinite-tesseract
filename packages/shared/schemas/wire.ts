@@ -50,5 +50,6 @@ export const WireAgentTurnOutput = z.discriminatedUnion("kind", [
     CheckedTurn,
 ])
 
+export type WireBranch = z.infer<typeof WireBranch>
 export type WireAgentTurnOutput = z.infer<typeof WireAgentTurnOutput>
 export type WireEffect = z.infer<typeof WireEffect>
