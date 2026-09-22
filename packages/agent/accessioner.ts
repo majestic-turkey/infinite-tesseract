@@ -15,16 +15,25 @@ export function accessionOutput(wireOutput: WireAgentTurnOutput, state: GameStat
     const accessionEffect = (effect: WireEffect): Effect => {
         switch (effect.kind) {
             case "gainItem":
-                // step 7: reuse an inventory id when name + tier match, so stacking works
+                const existingItem = Object.values(state.character.inventory).find(
+                    (item) => item.name === effect.item.name && item.tier === effect.item.tier
+                )
+                if (existingItem) {
+                    return { ...effect, item: { ...effect.item, id: existingItem.id } }
+                }
                 return { ...effect, item: { ...effect.item, id: mint("item") } }
             case "move":
                 if (!("newScene" in effect)) return effect
                 // step 8: re-mint while the id is already in state.session.scenes
+                let newId = mint("scene")
+                while (state.session.scenes.find(scene => scene.id === newId)) {
+                    newId = mint("scene")
+                }
                 return {
                     ...effect,
                     newScene: {
                         ...effect.newScene,
-                        scene: { ...effect.newScene.scene, id: mint("scene") },
+                        scene: { ...effect.newScene.scene, id: newId },
                     },
                 }
             default:
