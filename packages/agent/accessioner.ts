@@ -1,8 +1,6 @@
 // Take a wire turn output, mint IDs for new scenes and items, return AgentTurnOutput
 import type { GameState } from "../engine/engine.js"
-import { AgentTurnOutput, Branch, WireAgentTurnOutput, WireBranch, WireEffect, Effect, Choice, Scene } from "../shared/schemas.js"
-
-const counters = { item: 0, scene: 0, choice: 0 }
+import { AgentTurnOutput, Branch, WireAgentTurnOutput, WireBranch, WireEffect, Effect } from "../shared/schemas.js"
 
 function createMinter(turnNumber: number) {
     const counters = { item: 0, scene: 0, choice: 0 }
@@ -14,17 +12,17 @@ export function accessionOutput(wireOutput: WireAgentTurnOutput, state: GameStat
 
     const accessionEffect = (effect: WireEffect): Effect => {
         switch (effect.kind) {
-            case "gainItem":
-                const existingItem = Object.values(state.character.inventory).find(
+            case "gainItem": {
+                const existingItem = state.character.inventory.find(
                     (item) => item.name === effect.item.name && item.tier === effect.item.tier
                 )
                 if (existingItem) {
                     return { ...effect, item: { ...effect.item, id: existingItem.id } }
                 }
                 return { ...effect, item: { ...effect.item, id: mint("item") } }
+            }
             case "move":
                 if (!("newScene" in effect)) return effect
-                // step 8: re-mint while the id is already in state.session.scenes
                 let newId = mint("scene")
                 while (state.session.scenes.find(scene => scene.id === newId)) {
                     newId = mint("scene")
