@@ -1,7 +1,7 @@
 // Narrator implementation. Test with Claude, chatGPT, and some HuggingFace models
 import type { Narrator } from "./narrator.js"
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod"
-import { AgentTurnOutput, AgentWireOutput } from "../shared/schemas.js"
+import { AgentTurnOutput, WireAgentTurnOutput } from "../shared/schemas.js"
 import { generatePrompt } from "./context.js"
 import Anthropic from "@anthropic-ai/sdk"
 
@@ -10,15 +10,12 @@ const claudeConfig = {
     effort: "medium",
 } satisfies ClaudeNarratorConfig
 
-const claude = createClaudeNarrator(claudeConfig)
 
 export type ClaudeNarratorConfig = {
     client?: Anthropic
     model?: string
     effort?: "low" | "medium" | "high"
 }
-
-zodOutputFormat(AgentWireOutput)
 
 export function createClaudeNarrator(config: ClaudeNarratorConfig = {}): Narrator {
     const client = config.client ?? new Anthropic()
@@ -31,3 +28,7 @@ export function createClaudeNarrator(config: ClaudeNarratorConfig = {}): Narrato
         },
     }
 }
+
+zodOutputFormat(WireAgentTurnOutput)
+
+const claude = createClaudeNarrator(claudeConfig)

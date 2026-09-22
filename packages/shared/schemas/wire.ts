@@ -1,44 +1,43 @@
 import { z } from "zod"
 import { Item } from "./items.js"
-import { MoveKnownScene } from "./effect.js"
+import { MoveKnownScene, DamageEffect, HealEffect, GoldEffect, XpEffect, LoseItemEffect, GainPerkEffect, ReputationEffect } from "./effect.js"
 import { Scene } from "./scene.js"
 import { Choice, Check } from "./turn.js"
-import { StatName } from "./stats.js"
 
 export const WireItem = Item.omit({ id: true })
 export const WireScene = Scene.omit({ id: true })
 export const WireChoice = Choice.omit({ id: true })
-export const MoveNewWireScene = z.strictObject({
+export const WireMoveNewScene = z.strictObject({
     kind: z.literal("move"),
     newScene: z.object({ scene: WireScene, exitLabel: z.string().min(1) }),
 })
 
 export const WireEffect = z.union([
-    z.object({ kind: z.literal("damage"),     amount: z.number().int().min(0) }),
-    z.object({ kind: z.literal("heal"),       amount: z.number().int().min(0) }),
-    z.object({ kind: z.literal("gold"),       amount: z.number().int() }),          // signed
-    z.object({ kind: z.literal("xp"),         stat: StatName, amount: z.number().int().min(0) }),
-    z.object({ kind: z.literal("gainItem"),   item: WireItem }),                         // full item — it's new
-    z.object({ kind: z.literal("loseItem"),   itemId: z.string(), qty: z.number().int().min(1).default(1) }),
-    z.object({ kind: z.literal("gainPerk"),   perk: z.string() }),
-    z.object({ kind: z.literal("reputation"), renown: z.number().int().default(0), morality: z.number().int().default(0) }),
+    DamageEffect,
+    HealEffect,
+    GoldEffect,
+    XpEffect,
+    z.object({ kind: z.literal("gainItem"), item: WireItem }),
+    LoseItemEffect,
+    GainPerkEffect,
+    ReputationEffect,
     // Known scene: sceneId, reached by an exit. New scene: full scene plus a label for the exit leading to it.
     MoveKnownScene,
-    MoveNewWireScene,
+    WireMoveNewScene,
 ])
 
-export const WireBranch = z.object({
+export const WireBranch = z.strictObject({
     narrative: z.string(),
     effects: z.array(WireEffect).default([]),
 })
     
-const NarrativeTurn = z.object({
+const NarrativeTurn = z.strictObject({
   kind: z.literal("narration"),
   outcome: WireBranch,                       // Only one outcome, no choices
   choices: z.array(WireChoice).default([]),
 })
 
-const CheckedTurn = z.object({
+const CheckedTurn = z.strictObject({
   kind: z.literal("check"),
   check: Check,                          // Can be either success or failure based on dice roll
   onSuccess: WireBranch,
@@ -46,7 +45,10 @@ const CheckedTurn = z.object({
   choices: z.array(WireChoice).default([]),
 })
 
-export const AgentWireOutput = z.discriminatedUnion("kind", [
+export const WireAgentTurnOutput = z.discriminatedUnion("kind", [
     NarrativeTurn,
     CheckedTurn,
 ])
+
+export type AgentWireOutput = z.infer<typeof WireAgentTurnOutput>
+export type WireEffect = z.infer<typeof WireEffect>
