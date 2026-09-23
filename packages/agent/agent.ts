@@ -1,6 +1,6 @@
 import type { Narrator } from "./narrator.js"
 import { NarratorError } from "./narrator.js"
-import { WireAgentTurnOutput } from "../shared/schemas.js"
+import { WireTurnEnvelope } from "../shared/schemas.js"
 import type { AgentTurnOutput, PlayerAction } from "../shared/schemas.js"
 import { generatePrompt } from "./context.js"
 import type { GameState } from "../engine/engine.js"
@@ -15,7 +15,7 @@ export type ClaudeNarratorConfig = {
     effort?: "low" | "medium" | "high"
 }
 
-const outputFormat = zodOutputFormat(WireAgentTurnOutput)
+const outputFormat = zodOutputFormat(WireTurnEnvelope)
 
 
 export function createClaudeNarrator(config: ClaudeNarratorConfig = {}): Narrator {
@@ -36,7 +36,7 @@ export function createClaudeNarrator(config: ClaudeNarratorConfig = {}): Narrato
         if (response.stop_reason === "max_tokens") throw new NarratorError("truncated")
         if (!response.parsed_output) throw new NarratorError("unparsable")
 
-        return accessionOutput(response.parsed_output, state)
+        return accessionOutput(response.parsed_output.turn, state)
     }
 
     return {nextTurn}

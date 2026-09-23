@@ -31,7 +31,8 @@ export function accessionOutput(wireOutput: WireAgentTurnOutput, state: GameStat
                     ...effect,
                     newScene: {
                         ...effect.newScene,
-                        scene: { ...effect.newScene.scene, id: newId },
+                        // The wire scene carries no id, exits or entity lists - the engine fills them
+                        scene: { ...effect.newScene.scene, id: newId, exits: [], characters: [], enemies: [], items: [] },
                     },
                 }
             default:

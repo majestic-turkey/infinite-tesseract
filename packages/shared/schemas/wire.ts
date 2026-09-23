@@ -5,7 +5,9 @@ import { Scene } from "./scene.js"
 import { Choice, Check } from "./turn.js"
 
 export const WireItem = Item.omit({ id: true })
-export const WireScene = Scene.omit({ id: true })
+// The engine owns the id and the exit into the scene; characters/enemies/items are id lists
+// nothing resolves yet. Leaving all five out also keeps the compiled grammar under the API's limit.
+export const WireScene = Scene.omit({ id: true, exits: true, characters: true, enemies: true, items: true })
 export const WireChoice = Choice.omit({ id: true })
 export const WireMoveNewScene = z.strictObject({
     kind: z.literal("move"),
@@ -50,6 +52,11 @@ export const WireAgentTurnOutput = z.discriminatedUnion("kind", [
     CheckedTurn,
 ])
 
+// The structured-output schema must have an object at its root - a union root is rejected - so the
+// turn travels in an envelope. The model fills `turn`; accessionOutput unwraps it.
+export const WireTurnEnvelope = z.strictObject({ turn: WireAgentTurnOutput })
+
 export type WireBranch = z.infer<typeof WireBranch>
 export type WireAgentTurnOutput = z.infer<typeof WireAgentTurnOutput>
+export type WireTurnEnvelope = z.infer<typeof WireTurnEnvelope>
 export type WireEffect = z.infer<typeof WireEffect>

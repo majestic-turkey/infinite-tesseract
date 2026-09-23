@@ -10,6 +10,7 @@
     "test": "vitest",
     "test:run": "vitest run",
     "coverage": "vitest run --coverage",
+    "smoke": "vitest run --mode smoke tests/smoke",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
