@@ -5,3 +5,9 @@ import type { AgentTurnOutput, PlayerAction } from "../shared/schemas.js"
 export type Narrator = {
     nextTurn(state: GameState, action: PlayerAction): Promise<AgentTurnOutput>;
 }
+
+export class NarratorError extends Error {
+    constructor(readonly reason: "refused" | "truncated" | "unparsable" | "invalid") {
+        super(`narrator failed: ${reason}`)
+    }
+}
